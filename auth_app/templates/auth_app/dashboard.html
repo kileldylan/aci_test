@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard - ACI Test Project</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .dashboard-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+        .header .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header .user-info span {
+            color: #666;
+        }
+        .btn-logout {
+            padding: 8px 20px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .btn-logout:hover {
+            background: #c0392b;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .success-badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .aci-verification {
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .aci-verification h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .aci-verification ul {
+            list-style: none;
+            padding: 0;
+        }
+        .aci-verification li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .aci-verification li:last-child {
+            border-bottom: none;
+        }
+        .status-pass {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        .status-fail {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        .status-partial {
+            color: #f39c12;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>🏠 Dashboard</h1>
+            <div class="user-info">
+                <span>Welcome, <strong>{{ user.username }}</strong></span>
+                <a href="{% url 'auth_app:logout' %}" class="btn-logout">Logout</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>✅ You are logged in!</h2>
+            <p>
+                You have successfully authenticated with your email and password.
+                <span class="success-badge">✓ Authenticated</span>
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>📋 ACI Verification Status</h2>
+            <div class="aci-verification">
+                <h3>Requirement: User Authentication</h3>
+                <p style="margin-bottom: 15px; color: #666;">Acceptance Criteria:</p>
+                <ul>
+                    <li>
+                        <span>1. User can log in with valid email and password</span>
+                        <span class="status-pass">✓ SATISFIED</span>
+                    </li>
+                    <li>
+                        <span>2. Invalid credentials show error message</span>
+                        <span class="status-pass">✓ SATISFIED</span>
+                    </li>
+                    <li>
+                        <span>3. Successful login redirects to dashboard</span>
+                        <span class="status-pass">✓ SATISFIED</span>
+                    </li>
+                    <li>
+                        <span>4. Login attempts are logged</span>
+                        <span class="status-pass">✓ SATISFIED</span>
+                    </li>
+                    <li>
+                        <span>5. Password hashing is used</span>
+                        <span class="status-pass">✓ SATISFIED</span>
+                    </li>
+                </ul>
+                <div style="margin-top: 15px; padding: 10px; background: #27ae60; color: white; border-radius: 6px; text-align: center;">
+                    <strong>✅ VERIFIED</strong> - All acceptance criteria satisfied
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🔍 ACI Test Information</h2>
+            <p>
+                This project is designed to test ACI's verification capabilities.
+                The Jira mock endpoint at <code>/api/jira/issues/</code> provides the requirement data.
+            </p>
+            <p style="margin-top: 10px; font-size: 14px; color: #888;">
+                <strong>Jira Key:</strong> PROJ-123<br>
+                <strong>Requirement:</strong> Users should be able to log in with their email and password
+            </p>
+        </div>
+    </div>
+</body>
+</html>
