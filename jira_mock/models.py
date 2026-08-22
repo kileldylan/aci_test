@@ -18,4 +18,7 @@ class JiraIssue(models.Model):
 
 class TestModel(models.Model):
     test_field = models.CharField(max_length=50)
-    
+
+class Profile(models.Model):
+    name = models.CharField(max_length=50)
+    phone = models.IntegerField()
