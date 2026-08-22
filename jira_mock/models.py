@@ -22,3 +22,4 @@ class TestModel(models.Model):
 class Profile(models.Model):
     name = models.CharField(max_length=50)
     phone = models.IntegerField()
+    address = models.CharField(max_length=50)
