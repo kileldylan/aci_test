@@ -15,3 +15,11 @@ class JiraIssue(models.Model):
     
     def __str__(self):
         return f"{self.key}: {self.summary}"
+
+class TestModel(models.Model):
+    test_field = models.CharField(max_length=50)
+
+class Profile(models.Model):
+    name = models.CharField(max_length=50)
+    phone = models.IntegerField()
+    address = models.CharField(max_length=50)
