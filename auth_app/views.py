@@ -75,6 +75,7 @@ def logout_view(request):
     messages.success(request, "You have been logged out successfully.")
     return redirect('auth_app:login')
 
+# deploy to test
 # API endpoint for ACI verification
 @csrf_exempt
 def auth_health_check(request):
