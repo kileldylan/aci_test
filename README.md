@@ -15,3 +15,5 @@ the SMTP server used to deliver reset emails with these environment variables:
 For example, set them in the deployment environment or in a local `.env` file.
 The automated tests use Django's in-memory email backend.
 Added password reset functionlity
+
+Run the password-reset tests with python manage.py test auth_app.tests.
