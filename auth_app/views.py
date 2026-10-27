@@ -65,8 +65,14 @@ def login_view(request):
 @login_required
 def dashboard_view(request):
     """Dashboard after successful login"""
+    last_successful_login = (
+        LoginAttempt.objects.filter(user=request.user, success=True)
+        .order_by("-timestamp")
+        .first()
+    )
     return render(request, 'auth_app/dashboard.html', {
-        'user': request.user
+        'user': request.user,
+        'last_successful_login': last_successful_login,
     })
 
 def logout_view(request):
