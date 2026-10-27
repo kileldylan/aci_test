@@ -19,3 +19,4 @@ Added password reset functionlity
 Run the password-reset tests with python manage.py test auth_app.tests. 
 This is a test READ.me to be used by Onspec repo, still testing
 Test1
+Test2
