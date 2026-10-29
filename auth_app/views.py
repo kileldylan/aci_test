@@ -9,6 +9,9 @@ from .forms import CustomLoginForm
 from .models import LoginAttempt
 import json
 
+#trigger_fail
+
+
 def login_view(request):
     """Login page with email and password"""
     if request.user.is_authenticated:
@@ -65,8 +68,14 @@ def login_view(request):
 @login_required
 def dashboard_view(request):
     """Dashboard after successful login"""
+    last_successful_login = (
+        LoginAttempt.objects.filter(user=request.user, success=True)
+        .order_by("-timestamp")
+        .first()
+    )
     return render(request, 'auth_app/dashboard.html', {
-        'user': request.user
+        'user': request.user,
+        'last_successful_login': last_successful_login,
     })
 
 def logout_view(request):

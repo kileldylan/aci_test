@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main", "aci" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run basic check
+        run: |
+          echo "Running CI for KIL-8..."
+          python -m compileall . 
+          echo "Build successful!"
+
+      - name: Simulate failure based on condition
+        run: |
+          if grep -q "trigger_fail" views.py; then
+            echo "Found trigger_fail in views.py, failing the build!"
+            exit 1
+          else
+            echo "No failure trigger found. Build is green."
+          fi
