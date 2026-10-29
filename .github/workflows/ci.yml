@@ -17,6 +17,6 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run basic check
+      - name: Compile Python files
         run: |
           python -m compileall -q .
