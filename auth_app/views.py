@@ -9,6 +9,9 @@ from .forms import CustomLoginForm
 from .models import LoginAttempt
 import json
 
+#trigger_fail
+
+
 def login_view(request):
     """Login page with email and password"""
     if request.user.is_authenticated:
