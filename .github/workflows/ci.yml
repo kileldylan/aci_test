@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "aci", "main" ]
+    branches: [ "main", "aci" ]
 
 jobs:
   build:
@@ -22,10 +22,11 @@ jobs:
           python -m compileall . 
           echo "Build successful!"
 
-      # NEW: Add a test to see if ACI catches the failure
       - name: Simulate failure based on condition
         run: |
           if grep -q "trigger_fail" views.py; then
-            echo "Found trigger_fail, failing the build!"
+            echo "Found trigger_fail in views.py, failing the build!"
             exit 1
+          else
+            echo "No failure trigger found. Build is green."
           fi
