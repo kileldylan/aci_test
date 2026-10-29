@@ -1,0 +1,22 @@
+name: ci
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, edited ]
+    branches: [ "main", "aci" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile Python files
+        run: |
+          python -m compileall -q .

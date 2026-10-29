@@ -2,6 +2,9 @@ from django.test import TestCase, Client
 from django.contrib.auth.models import User
 from django.urls import reverse
 
+from auth_app.models import LoginAttempt
+
+
 class AuthenticationTests(TestCase):
     def setUp(self):
         self.client = Client()
@@ -44,3 +47,28 @@ class AuthenticationTests(TestCase):
         response = self.client.get(self.dashboard_url)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith('/login/'))
+
+    def test_dashboard_displays_last_successful_login(self):
+        """Dashboard shows the most recent successful login timestamp."""
+        self.client.force_login(self.user)
+        LoginAttempt.objects.create(
+            user=self.user,
+            email=self.user.email,
+            success=True,
+        )
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertContains(response, 'Last successful login:')
+        self.assertIsNotNone(response.context['last_successful_login'])
+
+    def test_dashboard_shows_fallback_without_successful_login_history(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertContains(
+            response,
+            'No previous successful login recorded.',
+        )
+        self.assertIsNone(response.context['last_successful_login'])
