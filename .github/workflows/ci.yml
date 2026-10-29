@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "aci" ]
+    branches: [ "aci", "main" ] # Make sure your base branch is here
 
 jobs:
   build:
@@ -11,9 +11,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Run basic check
         run: |
-          echo "Simulating a build..."
-          # If we want to test a failure later, we uncomment the next line
-          exit 1 
+          echo "Running CI for KIL-8..."
+          python -m compileall . 
           echo "Build successful!"
