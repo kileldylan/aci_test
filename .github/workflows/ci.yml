@@ -15,5 +15,5 @@ jobs:
         run: |
           echo "Simulating a build..."
           # If we want to test a failure later, we uncomment the next line
-          # exit 1 
+          exit 1 
           echo "Build successful!"
