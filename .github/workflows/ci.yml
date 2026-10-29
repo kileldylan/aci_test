@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ "aci" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run basic check
+        run: |
+          echo "Simulating a build..."
+          # If we want to test a failure later, we uncomment the next line
+          # exit 1 
+          echo "Build successful!"
