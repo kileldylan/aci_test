@@ -25,7 +25,7 @@ def login_view(request):
             
             # Try to find user by email
             try:
-                user = User.objects.get(email=email)
+                user = User.objects.get(email__iexact=email)
                 user_auth = authenticate(request, username=user.username, password=password)
                 
                 if user_auth is not None:

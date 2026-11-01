@@ -25,6 +25,15 @@ class AuthenticationTests(TestCase):
         self.assertEqual(response.status_code, 302)  # Redirect to dashboard
         self.assertRedirects(response, self.dashboard_url)
 
+    def test_login_with_case_insensitive_email(self):
+        """Email address casing should not prevent a successful login."""
+        response = self.client.post(self.login_url, {
+            'username': 'TEST@EXAMPLE.COM',
+            'password': 'testpass123'
+        })
+
+        self.assertRedirects(response, self.dashboard_url)
+
     def test_login_with_invalid_credentials(self):
         """Test that invalid credentials show error message"""
         response = self.client.post(self.login_url, {
