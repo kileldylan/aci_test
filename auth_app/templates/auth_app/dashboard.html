@@ -129,6 +129,14 @@
                 You have successfully authenticated with your email and password.
                 <span class="success-badge">✓ Authenticated</span>
             </p>
+            <p style="margin-top: 10px;">
+                <strong>Last successful login:</strong>
+                {% if last_successful_login %}
+                    {{ last_successful_login.timestamp|date:"M j, Y, P" }}
+                {% else %}
+                    No previous successful login recorded.
+                {% endif %}
+            </p>
         </div>
 
         <div class="card">
