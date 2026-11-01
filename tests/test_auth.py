@@ -33,6 +33,13 @@ class AuthenticationTests(TestCase):
         })
 
         self.assertRedirects(response, self.dashboard_url)
+        self.assertTrue(
+            LoginAttempt.objects.filter(
+                user=self.user,
+                email='TEST@EXAMPLE.COM',
+                success=True,
+            ).exists()
+        )
 
     def test_login_with_invalid_credentials(self):
         """Test that invalid credentials show error message"""
