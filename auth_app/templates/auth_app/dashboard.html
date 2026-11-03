@@ -74,6 +74,22 @@
             font-size: 12px;
             font-weight: 600;
         }
+        .login-activity-list {
+            list-style: none;
+            margin-top: 12px;
+        }
+        .login-activity-list li {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+        .login-activity-list li:last-child {
+            border-bottom: none;
+        }
         .aci-verification {
             background: #f8f9fa;
             border: 2px solid #667eea;
@@ -119,7 +135,10 @@
             <h1>🏠 Dashboard</h1>
             <div class="user-info">
                 <span>Welcome, <strong>{{ user.username }}</strong></span>
-                <a href="{% url 'auth_app:logout' %}" class="btn-logout">Logout</a>
+                <form method="post" action="{% url 'auth_app:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">Logout</button>
+                </form>
             </div>
         </div>
 
@@ -129,6 +148,33 @@
                 You have successfully authenticated with your email and password.
                 <span class="success-badge">✓ Authenticated</span>
             </p>
+            <p style="margin-top: 10px;">
+                <strong>Last successful login:</strong>
+                {% if last_successful_login %}
+                    {{ last_successful_login.timestamp|date:"M j, Y, P" }}
+                {% else %}
+                    No previous successful login recorded.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="card">
+            <h2>Recent login activity</h2>
+            <p>Your five most recent successful login attempts.</p>
+            {% if recent_successful_logins %}
+                <ul class="login-activity-list">
+                    {% for attempt in recent_successful_logins %}
+                        <li>
+                            <span class="status-pass">Successful</span>
+                            <time datetime="{{ attempt.timestamp|date:'c' }}">
+                                {{ attempt.timestamp|date:"M j, Y, P" }}
+                            </time>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No successful login activity recorded yet.</p>
+            {% endif %}
         </div>
 
         <div class="card">

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
@@ -5,9 +7,40 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
+from django.db.models import Q
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 from .forms import CustomLoginForm
 from .models import LoginAttempt
-import json
+
+#trigger_fail
+
+LOGIN_FAILURE_LIMIT = 5
+LOGIN_LOCKOUT_DURATION = timedelta(minutes=15)
+
+
+def _login_is_locked(email):
+    last_success = (
+        LoginAttempt.objects.filter(email__iexact=email, success=True)
+        .order_by("-timestamp", "-pk")
+        .first()
+    )
+    failures = LoginAttempt.objects.filter(email__iexact=email, success=False)
+    if last_success is not None:
+        failures = failures.filter(
+            Q(timestamp__gt=last_success.timestamp)
+            | Q(timestamp=last_success.timestamp, pk__gt=last_success.pk)
+        )
+
+    if failures.count() < LOGIN_FAILURE_LIMIT:
+        return False
+
+    latest_failure = failures.order_by("-timestamp", "-pk").first()
+    return (
+        latest_failure is not None
+        and timezone.now() < latest_failure.timestamp + LOGIN_LOCKOUT_DURATION
+    )
+
 
 def login_view(request):
     """Login page with email and password"""
@@ -19,36 +52,36 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            
-            # Try to find user by email
-            try:
-                user = User.objects.get(email=email)
-                user_auth = authenticate(request, username=user.username, password=password)
-                
-                if user_auth is not None:
-                    login(request, user_auth)
-                    
-                    # Log successful attempt
-                    LoginAttempt.objects.create(
-                        user=user,
-                        email=email,
-                        success=True,
-                        ip_address=request.META.get('REMOTE_ADDR')
+
+            if _login_is_locked(email):
+                messages.error(request, "Invalid email or password")
+            else:
+                try:
+                    user = User.objects.get(email__iexact=email)
+                except User.DoesNotExist:
+                    user = None
+
+                if user is not None:
+                    user_auth = authenticate(
+                        request,
+                        username=user.username,
+                        password=password,
                     )
-                    
-                    messages.success(request, f"Welcome back, {user.username}!")
-                    return redirect('auth_app:dashboard')
-                else:
-                    # Invalid password
-                    LoginAttempt.objects.create(
-                        email=email,
-                        success=False,
-                        ip_address=request.META.get('REMOTE_ADDR')
-                    )
-                    messages.error(request, "Invalid email or password")
-                    
-            except User.DoesNotExist:
-                # User not found
+
+                    if user_auth is not None:
+                        login(request, user_auth)
+                        LoginAttempt.objects.create(
+                            user=user,
+                            email=email,
+                            success=True,
+                            ip_address=request.META.get('REMOTE_ADDR')
+                        )
+                        messages.success(
+                            request,
+                            f"Welcome back, {user.username}!",
+                        )
+                        return redirect('auth_app:dashboard')
+
                 LoginAttempt.objects.create(
                     email=email,
                     success=False,
@@ -65,10 +98,22 @@ def login_view(request):
 @login_required
 def dashboard_view(request):
     """Dashboard after successful login"""
+    last_successful_login = (
+        LoginAttempt.objects.filter(user=request.user, success=True)
+        .order_by("-timestamp")
+        .first()
+    )
+    recent_successful_logins = LoginAttempt.objects.filter(
+        user=request.user,
+        success=True,
+    ).order_by("-timestamp", "-pk")[:5]
     return render(request, 'auth_app/dashboard.html', {
-        'user': request.user
+        'user': request.user,
+        'last_successful_login': last_successful_login,
+        'recent_successful_logins': recent_successful_logins,
     })
 
+@require_POST
 def logout_view(request):
     """Logout user"""
     logout(request)
