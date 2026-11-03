@@ -233,3 +233,96 @@ class LogoutMethodSecurityTests(TestCase):
             html=False,
         )
         self.assertContains(response, 'csrfmiddlewaretoken', html=False)
+
+
+class RecentLoginActivityTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='activity-user',
+            email='activity@example.com',
+            password='testpass123',
+        )
+        self.client.force_login(self.user)
+        self.dashboard_url = reverse('auth_app:dashboard')
+
+    def create_attempt(self, *, user, success, timestamp):
+        attempt = LoginAttempt.objects.create(
+            user=user,
+            email=user.email,
+            success=success,
+        )
+        LoginAttempt.objects.filter(pk=attempt.pk).update(timestamp=timestamp)
+        attempt.refresh_from_db()
+        return attempt
+
+    def test_dashboard_lists_five_latest_successful_attempts_only(self):
+        now = timezone.now()
+        attempts = [
+            self.create_attempt(
+                user=self.user,
+                success=True,
+                timestamp=now - timedelta(hours=hours_ago),
+            )
+            for hours_ago in range(7)
+        ]
+        failed_attempt = self.create_attempt(
+            user=self.user,
+            success=False,
+            timestamp=now + timedelta(minutes=1),
+        )
+
+        response = self.client.get(self.dashboard_url)
+        activity = list(response.context['recent_successful_logins'])
+
+        self.assertEqual(len(activity), 5)
+        self.assertEqual(
+            [attempt.pk for attempt in activity],
+            [attempt.pk for attempt in attempts[:5]],
+        )
+        self.assertNotIn(failed_attempt.pk, [attempt.pk for attempt in activity])
+
+    def test_dashboard_activity_is_limited_to_the_signed_in_user(self):
+        other_user = get_user_model().objects.create_user(
+            username='other-activity-user',
+            email='other-activity@example.com',
+            password='testpass123',
+        )
+        other_attempt = self.create_attempt(
+            user=other_user,
+            success=True,
+            timestamp=timezone.now(),
+        )
+
+        response = self.client.get(self.dashboard_url)
+        activity = list(response.context['recent_successful_logins'])
+
+        self.assertTrue(all(attempt.user_id == self.user.pk for attempt in activity))
+        self.assertNotIn(other_attempt.pk, [attempt.pk for attempt in activity])
+
+    def test_dashboard_displays_success_status_and_timestamp(self):
+        attempt = self.create_attempt(
+            user=self.user,
+            success=True,
+            timestamp=timezone.now(),
+        )
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertContains(response, 'Recent login activity')
+        self.assertContains(response, 'Successful')
+        self.assertContains(response, attempt.timestamp.strftime('%b'))
+        self.assertContains(response, 'datetime="')
+
+    def test_dashboard_shows_empty_state_without_successful_activity(self):
+        self.create_attempt(
+            user=self.user,
+            success=False,
+            timestamp=timezone.now(),
+        )
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertContains(
+            response,
+            'No successful login activity recorded yet.',
+        )

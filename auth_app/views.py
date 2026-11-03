@@ -103,9 +103,14 @@ def dashboard_view(request):
         .order_by("-timestamp")
         .first()
     )
+    recent_successful_logins = LoginAttempt.objects.filter(
+        user=request.user,
+        success=True,
+    ).order_by("-timestamp", "-pk")[:5]
     return render(request, 'auth_app/dashboard.html', {
         'user': request.user,
         'last_successful_login': last_successful_login,
+        'recent_successful_logins': recent_successful_logins,
     })
 
 @require_POST
