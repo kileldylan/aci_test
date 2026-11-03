@@ -119,7 +119,10 @@
             <h1>🏠 Dashboard</h1>
             <div class="user-info">
                 <span>Welcome, <strong>{{ user.username }}</strong></span>
-                <a href="{% url 'auth_app:logout' %}" class="btn-logout">Logout</a>
+                <form method="post" action="{% url 'auth_app:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout">Logout</button>
+                </form>
             </div>
         </div>
 

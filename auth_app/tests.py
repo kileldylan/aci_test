@@ -172,3 +172,64 @@ class LoginRateLimitTests(TestCase):
 
         self.assertContains(wrong_password, 'Invalid email or password')
         self.assertContains(unknown_email, 'Invalid email or password')
+
+
+class LogoutMethodSecurityTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='logout-user',
+            email='logout@example.com',
+            password='testpass123',
+        )
+        self.logout_url = reverse('auth_app:logout')
+        self.dashboard_url = reverse('auth_app:dashboard')
+
+    def test_get_logout_is_rejected_without_ending_the_session(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.logout_url)
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(
+            self.client.get(self.dashboard_url).status_code,
+            200,
+        )
+
+    def test_post_logout_requires_csrf_token(self):
+        client = self.client_class(enforce_csrf_checks=True)
+        client.force_login(self.user)
+
+        response = client.post(self.logout_url)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(client.get(self.dashboard_url).status_code, 200)
+
+    def test_valid_csrf_post_logs_out_and_redirects_to_login(self):
+        client = self.client_class(enforce_csrf_checks=True)
+        client.get(reverse('auth_app:login'))
+        csrf_token = client.cookies['csrftoken'].value
+        client.force_login(self.user)
+
+        response = client.post(
+            self.logout_url,
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+
+        self.assertRedirects(response, reverse('auth_app:login'))
+        self.assertRedirects(
+            client.get(self.dashboard_url),
+            reverse('auth_app:login') + '?next=' + self.dashboard_url,
+        )
+
+    def test_dashboard_logout_control_submits_post_with_csrf(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertContains(response, '<form method="post"', html=False)
+        self.assertContains(
+            response,
+            f'action="{self.logout_url}"',
+            html=False,
+        )
+        self.assertContains(response, 'csrfmiddlewaretoken', html=False)

@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from .forms import CustomLoginForm
 from .models import LoginAttempt
 
@@ -107,6 +108,7 @@ def dashboard_view(request):
         'last_successful_login': last_successful_login,
     })
 
+@require_POST
 def logout_view(request):
     """Logout user"""
     logout(request)
