@@ -1,10 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "../OnSpec"
+			"path": "."
 		},
 		{
-			"path": "."
+			"path": "../Requora"
 		}
 	],
 	"settings": {}

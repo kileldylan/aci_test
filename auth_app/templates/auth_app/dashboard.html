@@ -74,6 +74,15 @@
             font-size: 12px;
             font-weight: 600;
         }
+        .failure-badge {
+            display: inline-block;
+            background: #e74c3c;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
         .login-activity-list {
             list-style: none;
             margin-top: 12px;
@@ -174,6 +183,25 @@
                 </ul>
             {% else %}
                 <p>No successful login activity recorded yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Recent failed sign-ins</h2>
+            <p>Your five most recent failed sign-in attempts.</p>
+            {% if recent_failed_logins %}
+                <ul class="login-activity-list">
+                    {% for attempt in recent_failed_logins %}
+                        <li>
+                            <span class="failure-badge">Failed</span>
+                            <time datetime="{{ attempt.timestamp|date:'c' }}">
+                                {{ attempt.timestamp|date:"M j, Y, P" }}
+                            </time>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No failed sign-in activity recorded.</p>
             {% endif %}
         </div>
 

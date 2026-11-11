@@ -245,10 +245,10 @@ class RecentLoginActivityTests(TestCase):
         self.client.force_login(self.user)
         self.dashboard_url = reverse('auth_app:dashboard')
 
-    def create_attempt(self, *, user, success, timestamp):
+    def create_attempt(self, *, user, success, timestamp, email=None):
         attempt = LoginAttempt.objects.create(
             user=user,
-            email=user.email,
+            email=email or user.email,
             success=success,
         )
         LoginAttempt.objects.filter(pk=attempt.pk).update(timestamp=timestamp)
@@ -280,6 +280,87 @@ class RecentLoginActivityTests(TestCase):
             [attempt.pk for attempt in attempts[:5]],
         )
         self.assertNotIn(failed_attempt.pk, [attempt.pk for attempt in activity])
+
+    def test_dashboard_lists_five_latest_failed_attempts_for_email(self):
+        now = timezone.now()
+        attempts = [
+            self.create_attempt(
+                user=None,
+                email=self.user.email.upper(),
+                success=False,
+                timestamp=now - timedelta(hours=hours_ago),
+            )
+            for hours_ago in range(7)
+        ]
+        self.create_attempt(
+            user=self.user,
+            success=True,
+            timestamp=now + timedelta(minutes=1),
+        )
+
+        response = self.client.get(self.dashboard_url)
+        activity = list(response.context['recent_failed_logins'])
+
+        self.assertEqual(len(activity), 5)
+        self.assertEqual(
+            [attempt.pk for attempt in activity],
+            [attempt.pk for attempt in attempts[:5]],
+        )
+        self.assertTrue(all(not attempt.success for attempt in activity))
+
+    def test_dashboard_failed_activity_does_not_include_other_emails(self):
+        other_user = get_user_model().objects.create_user(
+            username='other-failed-activity-user',
+            email='other-failed-activity@example.com',
+            password='testpass123',
+        )
+        other_attempt = self.create_attempt(
+            user=None,
+            email=other_user.email,
+            success=False,
+            timestamp=timezone.now(),
+        )
+        own_attempt = self.create_attempt(
+            user=None,
+            email=self.user.email,
+            success=False,
+            timestamp=timezone.now(),
+        )
+
+        response = self.client.get(self.dashboard_url)
+        activity_ids = [
+            attempt.pk for attempt in response.context['recent_failed_logins']
+        ]
+
+        self.assertIn(own_attempt.pk, activity_ids)
+        self.assertNotIn(other_attempt.pk, activity_ids)
+
+    def test_dashboard_displays_failed_status_and_timestamp(self):
+        attempt = self.create_attempt(
+            user=None,
+            email=self.user.email,
+            success=False,
+            timestamp=timezone.now(),
+        )
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertContains(response, 'Recent failed sign-ins')
+        self.assertContains(response, 'Failed')
+        self.assertContains(response, attempt.timestamp.strftime('%b'))
+        self.assertContains(response, f'datetime="{attempt.timestamp.isoformat()}')
+
+    def test_dashboard_shows_empty_state_without_failed_activity(self):
+        self.create_attempt(
+            user=self.user,
+            success=True,
+            timestamp=timezone.now(),
+        )
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertContains(response, 'No failed sign-in activity recorded.')
+        self.assertEqual(len(response.context['recent_failed_logins']), 0)
 
     def test_dashboard_activity_is_limited_to_the_signed_in_user(self):
         other_user = get_user_model().objects.create_user(

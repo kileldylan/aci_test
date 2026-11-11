@@ -107,10 +107,17 @@ def dashboard_view(request):
         user=request.user,
         success=True,
     ).order_by("-timestamp", "-pk")[:5]
+    recent_failed_logins = LoginAttempt.objects.none()
+    if request.user.email:
+        recent_failed_logins = LoginAttempt.objects.filter(
+            email__iexact=request.user.email,
+            success=False,
+        ).order_by("-timestamp", "-pk")[:5]
     return render(request, 'auth_app/dashboard.html', {
         'user': request.user,
         'last_successful_login': last_successful_login,
         'recent_successful_logins': recent_successful_logins,
+        'recent_failed_logins': recent_failed_logins,
     })
 
 @require_POST
