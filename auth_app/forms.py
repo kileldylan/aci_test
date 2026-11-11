@@ -16,6 +16,10 @@ class CustomLoginForm(AuthenticationForm):
         })
     )
 
+    def clean(self):
+        # Authentication is performed by the view after resolving email to a user.
+        return self.cleaned_data
+
     def confirm_login_allowed(self, user):
         if not user.is_active:
             raise forms.ValidationError("This account is inactive.")
